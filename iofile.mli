@@ -1,6 +1,12 @@
 open Dict
 open Extlib
 
+type wrapper =
+  |Int of int
+  |Float of float
+  |String of string
+  |Null
+
 (*Takes the name of the file to read and then reads it into a string*)
 val read_file : string -> string
 
