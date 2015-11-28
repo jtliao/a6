@@ -41,12 +41,47 @@ let rec get_col_indices (cols:string list) (d: dict) : int list =
             |Some x -> x::(get_col_indices t d)
             |None -> get_col_indices t d)
 
+let eval_operator (arr:wrapper array) (op: operator) (dicts) : bool option=
+    match op with
+    |Eq (c1, w1) -> Some (arr.(Hashtbl.find (snd dicts) c1) = w1)
+    |Lt (c2, w2) -> Some (arr.(Hashtbl.find (snd dicts) c2) < w2)
+    |Gt (c3, w3) -> Some (arr.(Hashtbl.find (snd dicts) c3) > w3)
+    |LtEq (c4, w4) -> Some (arr.(Hashtbl.find (snd dicts) c4) <= w4)
+    |GtEq (c5, w5) -> Some (arr.(Hashtbl.find (snd dicts) c5) >= w5)
+    |NotEq (c6, w6) -> Some (arr.(Hashtbl.find (snd dicts) c6) <> w6)
+
+let rec eval_constraint (arr: wrapper array) (cons: constraint) (dicts): bool=
+  match cons with
+  |Op o1 -> eval_operator arr op1 dicts
+  |And (o2, c1) -> (eval_operator arr op2 dicts)&&(eval_constraint arr c1 dicts)
+  |Or (op3, c2)-> (eval_operator arr op3 dicts)||(eval_constraint arr c2 dicts)
+
+let rec get_elements (arr: wrapper array) (cols : int list) (str : string ref)
+(cons: constraint) (dicts): unit =
+  match cons, cols with
+  |None, [] -> ()
+  |None, h::t -> str:= !str ^"        "^ arr.(h);
+                 get_elements arr t str cons dicts
+  |Some c, [] -> ()
+  |Some c, h::t -> if eval_constraint arr then str:= !str ^"        "^ arr.(h);
+                      get_elements arr t str cons dicts
+                   else get_elements arr t str cons dicts
+
 let execute_select (cols : string list) (tab: string) (cons: constraint)
 (dicts: ('a*'b) Hashtbl.t * ('c*'d) Hashtbl.t * ('e*'f) Hashtbl.t) : unit =
-  let table_dicts = match Dict.lookup (fst dicts) tab with
-                    |Some x -> x
-                    |None -> failwith "doesnt exist" in
-  let index_list = get_col_indices cols (snd dicts) in
+  try (
+    let table_dicts = Hashtbl.find (fst dicts) tab in
+    let index_list = get_col_indices cols (snd dicts) in
+    let selected_string = ref "" in
+    (*add column headers to string here*)
+    for x = 0 to Hashtbl.length (trd dicts) do
+      let arr = Hashtbl.find (trd dicts) x in
+      get_elements arr cols selected_string cons dicts
+    done
+  )
+  with
+    |Exception e -> "Invalid query, try again."; ()
+
 
 let execute_update =failwith "TODO"
 
