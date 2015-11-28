@@ -56,6 +56,3 @@ val run_repl : (('a*'b) Hashtbl.t * ('c*'d) Hashtbl.t * ('e*'f) Hashtbl.t)->unit
 (*The "main" function that will ask for the database file name and import
   it using iofile.ml, then run the REPL*)
 val _ : unit
-
-
-

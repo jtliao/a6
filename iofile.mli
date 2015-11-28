@@ -1,4 +1,3 @@
-open Dict
 open Extlib
 
 type wrapper =
@@ -18,10 +17,12 @@ val write_file : string -> string-> unit
   dictionaries.
   The first dict in the pair is the name-index dict, and the second is the
   index-array dict.*)
-val string_to_dict : string -> dict * dict
+val string_to_dict : string -> (('a*'b) Hashtbl.t * ('c*'d) Hashtbl.t *
+  ('e*'f) Hashtbl.t)
 
 (*Takes in a dict pair and then prints back to the database form so that it can
   be printed back to the file.
   The first dict in the pair is the name-index dict, and the second is the
   index-array dict.*)
-val dict_to_string : dict * dict -> string
+val dict_to_string : (('a*'b) Hashtbl.t * ('c*'d) Hashtbl.t *
+  ('e*'f) Hashtbl.t) -> string
