@@ -29,7 +29,7 @@ type constraint =
   -Drop t drops the table t*)
 type command =
   |Select of string list * string * constraint option
-  |Update of string * string list* constraint
+  |Update of string * string list * string list* constraint
   |Delete of string * constraint
   |Insert of string * string list * wrapper list
   |Create of string * string list
