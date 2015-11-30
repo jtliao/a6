@@ -8,92 +8,120 @@ type operator =
   |GtEq of string * wrapper
   |NotEq of string * wrapper
 
-type constraint =
+type constr =
   |Op of operator
-  |And of operator * constraint
-  |Or of operator * constraint
+  |And of operator * constr
+  |Or of operator * constr
 
 type command =
-  |Select of string list * string * constraint option
-  |Update of string * string list* constraint
-  |Delete of string * constraint
+  |Select of string list * string * constr option
+  |Update of string * string list * string list * constr
+  |Delete of string * constr
   |Insert of string * string list * wrapper list
   |Create of string * string list
   |Drop of string
 
-let frst = function
-|(f, _, _) -> f
-
-let scnd = function
-|(_, s, _) -> s
-
-let thrd = function
-|(_, _, t) -> t
-
-let rec get_index (val: 'a) (lst: 'a list) : int =
+(*let rec get_index (val : 'a) (lst: 'a list) : int =
   match lst with
   |[] -> raise Not_found
-  |h::t -> if val=h then 0 else 1+(find x t)
+  |h::t -> if val = h then 0 else 1 + (get_index val t)*)
 
 (*Parses the string that the user inputs into a type command*)
 let parse_input (s:string) : command =
   failwith "TODO"
 
-let rec get_col_indices (cols:string list) (d: dict) : int list =
+let rec get_col_indices (cols : string list) (dict : ('a,'b) Hashtbl.t)
+: int list =
   match cols with
   |[] -> []
-  |h::t -> (Hashtbl.find dict h)::(get_col_indices t d)
+  |h::t -> (Hashtbl.find dict h)::(get_col_indices t dict)
 
-let eval_operator (arr:wrapper array) (op: operator) (dicts) : bool=
-  match op with
-  |Eq (c1, w1) -> arr.(Hashtbl.find dict c1) = w1
-  |Lt (c2, w2) -> arr.(Hashtbl.find dict c2) < w2
-  |Gt (c3, w3) -> arr.(Hashtbl.find dict c3) > w3
-  |LtEq (c4, w4) -> arr.(Hashtbl.find dict c4) <= w4
-  |GtEq (c5, w5) -> arr.(Hashtbl.find dict c5) >= w5
-  |NotEq (c6, w6) -> arr.(Hashtbl.find dict c6) <> w6
-
-let rec eval_constraint (arr: wrapper array) (cons: constraint) (dict) : bool=
-  match cons with
-  |Op o1 -> eval_operator arr op1 dict
-  |And (o2, c1) -> (eval_operator arr op2 dict)&&(eval_constraint arr c1 dict)
-  |Or (op3, c2)-> (eval_operator arr op3 dict)||(eval_constraint arr c2 dict)
-
-let rec get_elements (arr: wrapper array) (cols : int list) (str : string ref)
-(cons: constraint) (dict): unit =
-  match cons, cols with
-  |None, [] -> ()
-  |None, h::t -> str:= !str ^"        "^ arr.(h);
-                 get_elements arr t str cons dict
-  |Some c, [] -> ()
-  |Some c, h::t -> if eval_constraint arr then str:= !str ^"        "^ arr.(h);
-                      get_elements arr t str cons dict
-                   else get_elements arr t str cons dict
-
-let execute_select (cols : string list) (tab: string) (cons: constraint)
-(dicts) : unit =
+let eval_operator (arr : wrapper array) (op : operator)
+(col_dict : ('a,'b) Hashtbl.t) : bool=
   try (
-    let table_dicts = Hashtbl.find (frst dicts) tab in
+    match op with
+    |Eq (c1, w1) -> arr.(Hashtbl.find col_dict c1) = w1
+    |Lt (c2, w2) -> arr.(Hashtbl.find col_dict c2) < w2
+    |Gt (c3, w3) -> arr.(Hashtbl.find col_dict c3) > w3
+    |LtEq (c4, w4) -> arr.(Hashtbl.find col_dict c4) <= w4
+    |GtEq (c5, w5) -> arr.(Hashtbl.find col_dict c5) >= w5
+    |NotEq (c6, w6) -> arr.(Hashtbl.find col_dict c6) <> w6
+  )
+  with
+  |Not_found -> raise Not_found
+
+let rec eval_constraint (arr: wrapper array) (cons: constr)
+(col_dict: ('a,'b) Hashtbl.t) : bool=
+  match cons with
+  |Op o1 -> eval_operator arr o1 col_dict
+  |And (o2, c1) -> (eval_operator arr o2 col_dict) &&
+                   (eval_constraint arr c1 col_dict)
+  |Or (o3, c2)-> (eval_operator arr o3 col_dict) ||
+                  (eval_constraint arr c2 col_dict)
+
+let rec get_elements (arr: wrapper array) (cols : int list) (str : string ref) : unit =
+  match cols with
+  |[] -> ()
+  |h::t -> (str:= !str ^"        "^ get_wrapped arr.(h)); get_elements arr t str cons
+
+let execute_select (cols : string list) (tab: string) (cons: constr option)
+(dict: ('a,'b) Hashtbl.t) : unit =
+  try (
+    let table_dicts = Hashtbl.find dict tab in
     let index_list = get_col_indices cols (fst table_dicts) in
     let selected_string = ref "" in
     (*add column headers to string here*)
     for x = 0 to Hashtbl.length (snd table_dicts) do
       let arr = Hashtbl.find (snd table_dicts) x in
-      get_elements arr index_list selected_string cons (fst table_dicts)
-    done
+      match cons with
+      |None -> get_elements arr index_list selected_string
+      |Some c -> if eval_constraint arr c (fst table_dicts)
+                 then
+                   get_elements arr index_list selected_string
+                 else ()
+    done; print_string !selected_string
   )
   with
-    |Exception e -> print_string "Invalid SELECT query."
+    |Not_found e -> print_string "Invalid constraint query."
 
+let rec update_array (arr: wrapper array) (cols : int list) (orig : int list)
+(vals : wrapper list) (cons: constr) : unit =
+  match cols with
+  |[] -> ()
+  |h::t -> let ind = get_index h orig in
+             (arr.(h) <- List.nth vals ind); update_array arr t orig vals cons
 
-let execute_update =failwith "TODO"
+let execute_update (tab : string) (cols : string list) (vals: wrapper list)
+(cons : constr) (dict : ('a,'b) Hashtbl.t) : ('a,'b) Hashtbl.t =
+  let table_dicts = Hashtbl.find dict tab in
+  let index_list = get_col_indices cols (fst table_dicts) in
+  (for x = 0 to Hashtbl.length (snd table_dicts) do
+    let arr = Hashtbl.find (snd table_dicts) x in
+    if eval_constraint arr cons (fst table_dicts)
+    then
+      update_array arr index_list index_list vals cons
+    else ()
+  done); dict
 
-let execute_delete =failwith "TODO"
+let delete_array =
+  sdf
 
-let execute_insert (tab: string) (cols : string list) (wrap: wrapper list) dicts
-: ('a*'b) Hashtbl.t * ('c*'d) Hashtbl.t * ('e*'f) Hashtbl.t =
+let execute_delete (tab : string) (cons : constr)
+(dict : ('a,'b) Hashtbl.t) : ('a,'b) Hashtbl.t =
+  let table_dicts = Hashtbl.find dict tab in
+  let index_list = get_col_indices cols (fst table_dicts) in
+  (for x = 0 to Hashtbl.length (snd table_dicts) do
+    let arr = Hashtbl.find (snd table_dicts) x in
+    if eval_constr arr cons (fst table_dicts)
+    then
+      delete_array
+    else ()
+  done); dict
+
+let execute_insert (tab: string) (cols : string list) (wrap: wrapper list)
+(dict: ('a,'b) Hashtbl.t) : ('a,'b) Hashtbl.t =
   try (
-    let table_dicts = Hashtbl.find (frst dicts) tab in
+    let table_dicts = Hashtbl.find dict tab in
     let col_indices = get_col_indices cols (fst table_dicts) in
     let arr_length = Hashtbl.length (fst table_dicts) in
     let arr = Array.make arr_length Null in
@@ -103,49 +131,63 @@ let execute_insert (tab: string) (cols : string list) (wrap: wrapper list) dicts
         arr.(x) <- (List.nth wrap ind)
       else ()
     done
-    let new_table_vals = Hashtbl.add (snd table_dicts)
-      (Hashtbl.length (snd table_dicts)) arr in
-    let new_tables = Hashtbl.add (frst dicts) tab
-      (fst table_dicts, new_table_vals) in
-    (new_tables, scnd dicts, thrd dicts)
+      Hashtbl.add (snd table_dicts) (Hashtbl.length (snd table_dicts)) arr;
+      Hashtbl.add dict tab (fst table_dicts, snd table_dicts); dict
   )
   with
-    |Exception e -> print_string "Invalid INSERT query."; dicts
+    |Exception e -> print_string "Invalid INSERT query."; dict
 
-let rec create_col_dict (cols : string list) dict (index : int): ('a*'b) Hashtbl.t=
+let rec create_col_dict (cols : string list) (col_dict: ('a,'b) Hashtbl.t)
+(index : int): ('a,'b) Hashtbl.t=
   match cols with
-  |[] -> dict
-  |h::t -> Hashtbl.add dict h index; create_col_dict t dict (index+1)
+  |[] -> col_dict
+  |h::t -> Hashtbl.add col_dict h index; create_col_dict t col_dict (index+1)
 
-let execute_create (tab: string) (col : string list) dicts
-: ('a*'b) Hashtbl.t * ('c*'d) Hashtbl.t * ('e*'f) Hashtbl.t =
-  try (
-    let table_dict = Hashtbl.add (frst dicts) tab (create_col_dict col
-      (Hashtbl.create (List.length col)) 0, Hashtbl.create 20) in
-    (table_dict, scnd dicts, thrd dicts)
-  )
-  with
-    |Exception e -> print_string "Invalid CREATE query"; dicts
+let execute_create (tab: string) (col : string list) (dict: ('a,'b) Hashtbl.t)
+: ('a,'b) Hashtbl.t =
+    Hashtbl.add dict tab (create_col_dict col
+      (Hashtbl.create (List.length col)) 0, Hashtbl.create 20); dict
 
-let execute (com:command) (dicts: ('a*'b) Hashtbl.t * ('c*'d) Hashtbl.t *
-  ('e*'f) Hashtbl.t):('a*'b) Hashtbl.t * ('c*'d) Hashtbl.t * ('e*'f) Hashtbl.t =
+let rec check_cols (col : string list) (dict : ('a,'b) Hashtbl.t) : bool =
+  match col with
+  |[] -> true
+  |h::t -> (Hashtbl.mem dict h) && (check_cols t dict)
+
+let check_command (col : string list) (tab : string)
+(dict : ('a,'b) Hashtbl.t) : bool =
+  if Hashtbl.mem dict tab
+  then
+    let table_dict = Hashtbl.find dict tab in
+    if check_cols col (fst table_dict)
+    then true
+    else print_string "Column(s) do(es) not exist in this table."; false
+  else print_string "Table does not exist."; false
+
+let execute (com:command) (dict: ('a,'b) Hashtbl.t) : ('a,'b) Hashtbl.t =
   match com with
-  |Select (col, tab, None) -> execute_select col tab dicts; dicts
-  |Select (col, tab, Some cons) -> execute_select col tab dicts; dicts
-  |Update () -> execute_update
-  |Delete () -> execute_delete
-  |Insert (tab, col, wrap) -> execute_insert tab col wrap dicts
-  |Create (tab, col) -> if Hashtbl.mem (frst dicts) tab then print_string
-                          "Table already exists,
-                           please choose a different name"; dicts
-                        else execute_create tab col dicts
-  |Drop tab -> if Hashtbl.mem (frst dicts) tab then (Hashtbl. remove tab (frst dicts), scnd dicts, thrd dicts)
-             else print_string "Table does not exist"; dicts
+  |Select (col, tab, cons) -> if check_command col tab dict
+                              then (execute_select col tab cons dict; dict)
+                              else dict
+  |Update (tab, col, vals, cons) -> if check_command col tab dict
+                              then execute_update tab col vals cons dict
+                              else dict
+  |Delete (tab, cons) -> if Hashtbl.mem dict tab
+                         then execute_delete tab cons dict
+                         else "Table does not exist."; dict
+  |Insert (tab, col, wrap) -> if check_command col tab dict
+                              then execute_insert tab col wrap dict
+                              else dict
+  |Create (tab, col) -> if Hashtbl.mem dict tab
+                        then (print_string "Table already exists,
+                           please choose a different name"; dict)
+                        else execute_create tab col dict
+  |Drop tab -> if Hashtbl.mem dict tab
+               then (Hashtbl.remove tab dict; dict)
+               else (print_string "Table does not exist"; dict)
 
-let rec run_repl (dicts: ('a*'b) Hashtbl.t * ('c*'d) Hashtbl.t *
-  ('e*'f) Hashtbl.t) : unit =
+let rec run_repl (dict: ('a,'b) Hashtbl.t) : unit =
   let user_command = read_line () in
-  run_repl (execute (parse_input user_command) dicts)
+  run_repl (execute (parse_input user_command) dict)
 
 let _ =
   let file_name = print_string ("Enter the name of the file containing
