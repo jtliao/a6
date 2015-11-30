@@ -29,7 +29,7 @@ type constr =
   -Drop t drops the table t*)
 type command =
   |Select of string list * string * constr option
-  |Update of string * string list * string list * constr
+  |Update of string * string list * wrapper list * constr
   |Delete of string * constr
   |Insert of string * string list * wrapper list
   |Create of string * string list

@@ -15,7 +15,7 @@ type constr =
 
 type command =
   |Select of string list * string * constr option
-  |Update of string * string list * string list * constr
+  |Update of string * string list * wrapper list * constr
   |Delete of string * constr
   |Insert of string * string list * wrapper list
   |Create of string * string list
@@ -27,7 +27,7 @@ type command =
   |h::t -> if val = h then 0 else 1 + (get_index val t)*)
 
 (*Gets the first index of a string that appears in a list. Used in parse_input.*)
-let get_index (l : string list) (s: string) : int =
+let get_index (l : 'a list) (s: 'a) : int =
   let rec helper l s c =
     match l with
     |[] -> failwith "Empty list"
@@ -58,7 +58,7 @@ let sub_list (l : 'a list) (i: int) (j: int) : 'a list =
   in helper l i j 0
 
 (*Generates a constraint from a string list.*)
-(*let gen_constraint (l: string list) : command = *)
+let gen_constraint (l: string list) : constr = failwith ""
 
 
 (*Parses a string list into a select command*)
@@ -69,11 +69,11 @@ let parse_select (l: string list) : command =
     match get_index l table = (List.length l) - 1 with
     |true -> Select (lst, table, None)
     |false -> let subl = sub_list l ((get_index l table)+2) ((List.length l)-1) in
-              Select (lst, table, gen_constraint subl)
+              Select (lst, table, Some (gen_constraint subl))
 
 (*Parses the string that the user inputs into a type command*)
-let parse_input (s:string) : command =
-  let coms = ["SELECT"; "UPDATE"; "DELETE"; "INSERT"; "CREATE"; "DROP"] in
+let parse_input (s:string) : command = failwith ""
+  (*let coms = ["SELECT"; "UPDATE"; "DELETE"; "INSERT"; "CREATE"; "DROP"] in
   let regexp = Str.regexp " " in
   let l = Str.split regexp s in
   let mapped = List.map (fun s -> strip s) l in
@@ -84,7 +84,7 @@ let parse_input (s:string) : command =
   |3 -> parse_insert mapped
   |4 -> parse_create mapped
   |5 -> parse_drop mapped
-  |_ -> failwith "Typo"
+  |_ -> failwith "Typo"*)
 
 
 let rec get_col_indices (cols : string list) (dict : ('a,'b) Hashtbl.t)
@@ -119,7 +119,7 @@ let rec eval_constraint (arr: wrapper array) (cons: constr)
 let rec get_elements (arr: wrapper array) (cols : int list) (str : string ref) : unit =
   match cols with
   |[] -> ()
-  |h::t -> (str:= !str ^"        "^ get_wrapped arr.(h)); get_elements arr t str cons
+  |h::t -> (str:= !str ^"        "^ wrap_to_string arr.(h); get_elements arr t str)
 
 let execute_select (cols : string list) (tab: string) (cons: constr option)
 (dict: ('a,'b) Hashtbl.t) : unit =
@@ -139,13 +139,13 @@ let execute_select (cols : string list) (tab: string) (cons: constr option)
     done; print_string !selected_string
   )
   with
-    |Not_found e -> print_string "Invalid constraint query."
+    |Not_found  -> print_string "Invalid constraint query."
 
 let rec update_array (arr: wrapper array) (cols : int list) (orig : int list)
 (vals : wrapper list) (cons: constr) : unit =
   match cols with
   |[] -> ()
-  |h::t -> let ind = get_index h orig in
+  |h::t -> let ind = get_index orig h in
              (arr.(h) <- List.nth vals ind); update_array arr t orig vals cons
 
 let execute_update (tab : string) (cols : string list) (vals: wrapper list)
@@ -161,15 +161,14 @@ let execute_update (tab : string) (cols : string list) (vals: wrapper list)
   done); dict
 
 let delete_array =
-  sdf
+  failwith ""
 
 let execute_delete (tab : string) (cons : constr)
 (dict : ('a,'b) Hashtbl.t) : ('a,'b) Hashtbl.t =
   let table_dicts = Hashtbl.find dict tab in
-  let index_list = get_col_indices cols (fst table_dicts) in
   (for x = 0 to Hashtbl.length (snd table_dicts) do
     let arr = Hashtbl.find (snd table_dicts) x in
-    if eval_constr arr cons (fst table_dicts)
+    if eval_constraint arr cons (fst table_dicts)
     then
       delete_array
     else ()
@@ -182,17 +181,17 @@ let execute_insert (tab: string) (cols : string list) (wrap: wrapper list)
     let col_indices = get_col_indices cols (fst table_dicts) in
     let arr_length = Hashtbl.length (fst table_dicts) in
     let arr = Array.make arr_length Null in
-    for x = 0 to (arr_length-1) do
+    (for x = 0 to (arr_length-1) do
       if List.exists (fun n -> n=x) col_indices
-      then let ind = get_index x cols in
+      then let ind = get_index col_indices x in
         arr.(x) <- (List.nth wrap ind)
       else ()
-    done
+    done);
       Hashtbl.add (snd table_dicts) (Hashtbl.length (snd table_dicts)) arr;
       Hashtbl.add dict tab (fst table_dicts, snd table_dicts); dict
   )
   with
-    |Exception e -> print_string "Invalid INSERT query."; dict
+    |_ -> print_string "Invalid INSERT query."; dict
 
 let rec create_col_dict (cols : string list) (col_dict: ('a,'b) Hashtbl.t)
 (index : int): ('a,'b) Hashtbl.t=
@@ -217,8 +216,8 @@ let check_command (col : string list) (tab : string)
     let table_dict = Hashtbl.find dict tab in
     if check_cols col (fst table_dict)
     then true
-    else print_string "Column(s) do(es) not exist in this table."; false
-  else print_string "Table does not exist."; false
+    else (print_string "Column(s) do(es) not exist in this table."; false)
+  else (print_string "Table does not exist."; false)
 
 let execute (com:command) (dict: ('a,'b) Hashtbl.t) : ('a,'b) Hashtbl.t =
   match com with
@@ -230,7 +229,7 @@ let execute (com:command) (dict: ('a,'b) Hashtbl.t) : ('a,'b) Hashtbl.t =
                               else dict
   |Delete (tab, cons) -> if Hashtbl.mem dict tab
                          then execute_delete tab cons dict
-                         else "Table does not exist."; dict
+                         else (print_string "Table does not exist."; dict)
   |Insert (tab, col, wrap) -> if check_command col tab dict
                               then execute_insert tab col wrap dict
                               else dict
@@ -239,7 +238,7 @@ let execute (com:command) (dict: ('a,'b) Hashtbl.t) : ('a,'b) Hashtbl.t =
                            please choose a different name"; dict)
                         else execute_create tab col dict
   |Drop tab -> if Hashtbl.mem dict tab
-               then (Hashtbl.remove tab dict; dict)
+               then (Hashtbl.remove dict tab; dict)
                else (print_string "Table does not exist"; dict)
 
 let rec run_repl (dict: ('a,'b) Hashtbl.t) : unit =
@@ -249,4 +248,4 @@ let rec run_repl (dict: ('a,'b) Hashtbl.t) : unit =
 let _ =
   let file_name = print_string ("Enter the name of the file containing
     the database:\n"); read_line () in
-  run_repl (string_to_dict (readfile file_name))
+  run_repl (string_to_dict (read_file file_name))
