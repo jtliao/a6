@@ -1,4 +1,4 @@
-open Extlib
+open ExtLib
 
 type wrapper =
   |Int of int

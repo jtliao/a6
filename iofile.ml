@@ -1,10 +1,13 @@
-open Extlib
+open ExtLib
 
 type wrapper =
   |Int of int
   |Float of float
   |String of string
   |Null
+
+let wrap_to_string w =
+  failwith "TODO"
 
 let read_file s =
   failwith "TODO"
