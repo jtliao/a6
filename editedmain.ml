@@ -4,8 +4,6 @@ type wrapper =
   |String of string
   |Null
 
-let wrap_to_string (w: wrapper) : string = failwith ""
-
 type operator =
   |Eq of string * wrapper
   |Lt of string * wrapper

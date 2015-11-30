@@ -58,7 +58,7 @@ let sub_list (l : 'a list) (i: int) (j: int) : 'a list =
   in helper l i j 0
 
 (*Generates a constraint from a string list.*)
-let gen_constraint (l: string list) : command =
+(*let gen_constraint (l: string list) : command = *)
 
 
 (*Parses a string list into a select command*)
@@ -69,7 +69,7 @@ let parse_select (l: string list) : command =
     match get_index l table = (List.length l) - 1 with
     |true -> Select (lst, table, None)
     |false -> let subl = sub_list l ((get_index l table)+2) ((List.length l)-1) in
-    Select (lst, table, gen_constraint subl)
+              Select (lst, table, gen_constraint subl)
 
 (*Parses the string that the user inputs into a type command*)
 let parse_input (s:string) : command =
