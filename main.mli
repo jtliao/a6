@@ -29,7 +29,7 @@ type constraint =
   -Drop t drops the table t*)
 type command =
   |Select of string list * string * constraint option
-  |Update of string * string list* constraint
+  |Update of string * string list * string list* constraint
   |Delete of string * constraint
   |Insert of string * string list * wrapper list
   |Create of string * string list
@@ -56,6 +56,3 @@ val run_repl : (('a*'b) Hashtbl.t * ('c*'d) Hashtbl.t * ('e*'f) Hashtbl.t)->unit
 (*The "main" function that will ask for the database file name and import
   it using iofile.ml, then run the REPL*)
 val _ : unit
-
-
-
