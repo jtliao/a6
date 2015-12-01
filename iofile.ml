@@ -20,7 +20,9 @@ let read_file filename =
   str
 
 let write_file changes filename =
-  failwith "TODO"
+  let chan = open_out filename in
+  output_string chan changes;
+  close_out chan
 
 let string_to_dict s =
   failwith "TODO"
