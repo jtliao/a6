@@ -14,8 +14,8 @@ let wrap_to_string w =
     | Null -> "null"
 
 let read_file filename =
-  let chan = open_in filename in
-
+  (* let chan = open_in filename in *)
+  failwith "TODO"
 
 let write_file changes filename =
   failwith "TODO"
