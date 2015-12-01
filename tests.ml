@@ -70,7 +70,7 @@ let new_tab_dict = Hashtbl.add new_arr_dict 0 [|String "Jason"|];
 TEST_UNIT = Hashtbl.add new_tab_dict "People" (col_dict, new_arr_dict);
   updated===new_tab_dict
 
-(*(*#2, inserting one element with more than one column/value*)
+(*#2, inserting one element with more than one column/value*)
 let col_dict = Hashtbl.create 3
 let arr_dict = Hashtbl.add col_dict "Name" 0;
   Hashtbl.add col_dict "Age" 1; Hashtbl.create 3
@@ -109,20 +109,17 @@ let updated = Hashtbl.add tab_dict "People" (col_dict, arr_dict);
 let new_tab_dict = Hashtbl.create 3
 TEST_UNIT = updated===new_tab_dict
 
-(*#1, dropping the only table*)
+(*#1, dropping one of two tables*)
 let col_dict1 = Hashtbl.create 3
 let arr_dict1 = Hashtbl.add col_dict1 "Name" 0; Hashtbl.create 3
-let tab_dict = Hashtbl.add arr_dict1 0 [|String "Bob"|];
-  Hashtbl.add arr_dict1 1 [|String "Jason"|]; Hashtbl.create 3
+let tab_dict = Hashtbl.add arr_dict1 0 [|String "Bob"|]; Hashtbl.create 3
 let col_dict2 = Hashtbl.create 3
 let arr_dict2 = Hashtbl.add col_dict2 "Age" 0; Hashtbl.create 3
-let updated = Hashtbl.add arr_dict2 0 [|String "Bob"|];
-  Hashtbl.add arr_dict2 1 [|String "Jason"|];
-  Hashtbl.add tab_dict "Numbers" (col_dict2, arr_dict2);
-  Hashtbl.add tab_dict "Name" (col_dict1, arr_dict1);
+let updated = Hashtbl.add tab_dict "Numbers" (col_dict2, arr_dict2);
+  Hashtbl.add tab_dict "People" (col_dict1, arr_dict1);
   execute (Drop("Numbers")) tab_dict
 let new_arr_dict = Hashtbl.create 3
-let new_tab_dict = Hashtbl.add new_arr_dict 0 [|String "Bob"; String "Jason"|];
+let new_tab_dict = Hashtbl.add new_arr_dict 0 [|String "Bob"|];
   Hashtbl.create 3
 TEST_UNIT = Hashtbl.add new_tab_dict "People" (col_dict1, new_arr_dict);
   updated===new_tab_dict
@@ -140,5 +137,5 @@ let new_tab_dict = Hashtbl.add new_arr_dict 0 [|String "Jason"|];
   Hashtbl.create 3
 TEST_UNIT = Hashtbl.add new_tab_dict "People" (col_dict, new_arr_dict);
   updated===new_tab_dict
-*)
+
 let x = print_string "All tests run.\n"

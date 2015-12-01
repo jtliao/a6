@@ -1,5 +1,5 @@
 open Iofile
-
+(*printing of select, OPEN table*)
 type operator =
   |Eq of string * wrapper
   |Lt of string * wrapper
@@ -21,7 +21,7 @@ type command =
   |Create of string * string list
   |Drop of string
 
-(*Gets the first index of a string that appears in a list. Used in parse_input.*)
+(*Gets the first index of a string that appears in a list.*)
 let get_index (l : 'a list) (s: 'a) : int =
   let rec helper l s c =
     match l with
