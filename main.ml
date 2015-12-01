@@ -1,6 +1,5 @@
 open Iofile
-open Assertions
-(*do delete, test cases, * case      *)
+
 type operator =
   |Eq of string * wrapper
   |Lt of string * wrapper
@@ -11,8 +10,8 @@ type operator =
 
 type constr =
   |Op of operator
-  |And of operator * constr
-  |Or of operator * constr
+  |And of constr * constr
+  |Or of constr * constr
 
 type command =
   |Select of string list * string * constr option
@@ -68,7 +67,7 @@ let parse_select (l: string list) : command =
               Select (lst, table, Some (gen_constraint subl))
 
 (*Parses the string that the user inputs into a type command*)
-let parse_input (s:string) : command = failwith ""
+let parse_input (s:string) : command =
   let coms = ["SELECT"; "UPDATE"; "DELETE"; "INSERT"; "CREATE"; "DROP"] in
   let regexp = Str.regexp " " in
   let l = Str.split regexp s in
@@ -114,10 +113,10 @@ let rec eval_constraint (arr: wrapper array) (cons: constr)
 (col_dict: ('a,'b) Hashtbl.t) : bool=
   match cons with
   |Op o1 -> eval_operator arr o1 col_dict
-  |And (o2, c1) -> (eval_operator arr o2 col_dict) &&
-                   (eval_constraint arr c1 col_dict)
-  |Or (o3, c2)-> (eval_operator arr o3 col_dict) ||
-                  (eval_constraint arr c2 col_dict)
+  |And (c1, c2) -> (eval_constraint arr c1 col_dict) &&
+                   (eval_constraint arr c2 col_dict)
+  |Or (c3, c4)-> (eval_constraint arr c3 col_dict) ||
+                  (eval_constraint arr c4 col_dict)
 
 (*Constructs the string with the elements of an array*)
 let rec get_elements (arr: wrapper array) (cols : int list) (str : string ref) : unit =
@@ -265,6 +264,3 @@ let _ =
     " the table, or type 'test' if running tests:\n"); read_line () in
   if file_name = "test" then ()
   else run_repl (string_to_dict (read_file file_name))
-
-
-

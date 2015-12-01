@@ -15,8 +15,8 @@ type operator =
   operators or more, or an Or combining two operators or more*)
 type constr =
   |Op of operator
-  |And of operator * constr
-  |Or of operator * constr
+  |And of constr * constr
+  |Or of constr * constr
 
 (*-Select (col, t, [None]) indicates the command SELECT col FROM t
   -Select (col, t, [Some constraint]) indicates the command SELECT col FROM
@@ -50,4 +50,4 @@ val execute : command -> (string, (string, int) Hashtbl.t *
   in the current data structures as parameters, with the hashtable mapping
   the table name to the table's values *)
 val run_repl : (string, (string, int) Hashtbl.t *
-  (int, wrapper array) Hashtbl.t) Hashtbl.t  ->unit
+  (int, wrapper array) Hashtbl.t) Hashtbl.t -> unit
