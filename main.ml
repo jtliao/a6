@@ -53,7 +53,7 @@ let sub_list (l : 'a list) (i: int) (j: int) : 'a list =
   in helper l i j 0
 
 (*Generates a constraint from a string list.*)
-let gen_constraint (l: string list) : constr =
+let gen_constraint (l: string list) : constr =failwith ""
 
 
 (*Parses a string list into a select command*)
@@ -67,7 +67,7 @@ let parse_select (l: string list) : command =
               Select (lst, table, Some (gen_constraint subl))
 
 (*Parses the string that the user inputs into a type command*)
-let parse_input (s:string) : command =
+let parse_input (s:string) : command =failwith""(*
   let coms = ["SELECT"; "UPDATE"; "DELETE"; "INSERT"; "CREATE"; "DROP"] in
   let regexp = Str.regexp " " in
   let l = Str.split regexp s in
@@ -79,7 +79,7 @@ let parse_input (s:string) : command =
   |3 -> parse_insert mapped
   |4 -> parse_create mapped
   |5 -> parse_drop mapped
-  |_ -> failwith "Typo"
+  |_ -> failwith "Typo"*)
 
 (*Return the list of indices of inputtedcolumns in the table*)
 let rec get_col_indices (cols : string list) (col_dict : ('a,'b) Hashtbl.t)
@@ -173,14 +173,18 @@ let execute_update (tab : string) (cols : string list) (vals: wrapper list)
 let execute_delete (tab : string) (cons : constr)
 (dict : ('a,'b) Hashtbl.t) : ('a,'b) Hashtbl.t =
   let table_dicts = Hashtbl.find dict tab in
-  for x = 0 to Hashtbl.length (snd table_dicts) do
-    let arr = Hashtbl.find (snd table_dicts) x in
+  let cntr = ref 0 in
+  let size = ref (Hashtbl.length (snd table_dicts)) in
+  while !cntr <= !size-1 do
+    let arr = Hashtbl.find (snd table_dicts) !cntr in
     if eval_constraint arr cons (fst table_dicts)
     then
-      (for i = x to Hashtbl.length (snd table_dicts)-2 do
-        Hashtbl.add (snd table_dicts) i (Hashtbl.find (snd table_dicts) (i+1))
-      done;Hashtbl.remove (snd table_dicts) (Hashtbl.length (snd table_dicts)-1))
-    else ()
+      if !cntr <= !size-2 then
+        (for i = !cntr to !size-2 do
+          Hashtbl.add (snd table_dicts) i (Hashtbl.find (snd table_dicts) (i+1))
+        done; Hashtbl.remove (snd table_dicts) (!size-1); size:= !size -1)
+      else ()
+    else incr cntr
   done; dict
 
 (*Execute the insert command on [tab] and return the updated hashtable*)
@@ -193,7 +197,8 @@ let execute_insert (tab: string) (cols : string list) (wrap: wrapper list)
     let arr = Array.make arr_length Null in
     for x = 0 to (arr_length-1) do
       if List.exists (fun n -> n=x) col_indices
-      then let ind = get_index col_indices x in
+      then
+        let ind = get_index col_indices x in
         arr.(x) <- (List.nth wrap ind)
       else ()
     done; Hashtbl.add (snd table_dicts) (Hashtbl.length (snd table_dicts)) arr;
