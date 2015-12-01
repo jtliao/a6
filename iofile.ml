@@ -6,7 +6,7 @@ type wrapper =
   |String of string
   |Null
 
-let wrap_to_string w =
+let wrap_to_string w =failwith
   match w with
     |
 

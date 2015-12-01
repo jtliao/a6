@@ -39,14 +39,15 @@ type command =
 val parse_input : string -> command
 
 (*Acts on the command that is inputted, taking the tuple of current
-  database data structures (with the first hash table being the table name ->
-  table values table, the second being the column name -> index table, and the
-  third being the row index -> array table) as parameters and returning the
+  database data structures (with the hash table mapping from the table name to
+  table values) as parameters and returning the
   updated pair after the command has been executed*)
-val execute : command -> ('a, 'b) Hashtbl.t -> ('a, 'b) Hashtbl.t
+val execute : command -> (string, (string, int) Hashtbl.t *
+  (int, wrapper array) Hashtbl.t) Hashtbl.t ->
+  (string, (string, int) Hashtbl.t * (int, wrapper array) Hashtbl.t) Hashtbl.t
 
-(*The function that will act as the REPL, repreatedly running and passing
-  in the current data structures as parameters, with the first hash table being
-  the table name -> table values table, the second being the column name ->
-  index table, and the third being the row index -> array table*)
-val run_repl : ('a, 'b) Hashtbl.t ->unit
+(*The function that will act as the REPL, repeatedly running and passing
+  in the current data structures as parameters, with the hashtable mapping
+  the table name to the table's values *)
+val run_repl : (string, (string, int) Hashtbl.t *
+  (int, wrapper array) Hashtbl.t) Hashtbl.t  ->unit
