@@ -12,8 +12,12 @@ let wrap_to_string w =
     | Null -> "null"
 
 let read_file filename =
-  (* let chan = open_in filename in *)
-  failwith "TODO"
+  let chan = open_in filename in
+  let length = in_channel_length chan in
+  let str = Bytes.create length in
+  really_input chan str 0 length;
+  close_in chan;
+  str
 
 let write_file changes filename =
   failwith "TODO"
