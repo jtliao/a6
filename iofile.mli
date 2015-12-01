@@ -20,10 +20,12 @@ val write_file : string -> string-> unit
   dictionaries.
   The first dict in the pair is the name-index dict, and the second is the
   index-array dict.*)
-val string_to_dict : string -> ('a, 'b) Hashtbl.t
+val string_to_dict : string -> (string, (string, int) Hashtbl.t *
+  (int, wrapper array) Hashtbl.t) Hashtbl.t
 
 (*Takes in a dict pair and then prints back to the database form so that it can
   be printed back to the file.
   The first dict in the pair is the name-index dict, and the second is the
   index-array dict.*)
-val dict_to_string : ('a, 'b) Hashtbl.t -> string
+val dict_to_string : (string, (string, int) Hashtbl.t *
+  (int, wrapper array) Hashtbl.t) Hashtbl.t -> string
