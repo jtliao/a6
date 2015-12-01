@@ -6,14 +6,18 @@ type wrapper =
   |String of string
   |Null
 
-let wrap_to_string w =failwith
+let wrap_to_string w =
   match w with
-    |
+    | Int i -> string_of_int i
+    | Float f -> string_of_float f
+    | String s -> s
+    | Null -> "null"
 
-let read_file s =
-  failwith "TODO"
+let read_file filename =
+  let chan = open_in filename in
 
-let write_file s1 s2 =
+
+let write_file changes filename =
   failwith "TODO"
 
 let string_to_dict s =
