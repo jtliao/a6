@@ -24,6 +24,27 @@ let write_file changes filename =
   output_string chan changes;
   close_out chan
 
+let string_to_wrap str =
+  try
+    let i = int_of_string str in
+    Int i
+  with
+  | _ ->
+    (try
+      let fl = float_of_string str in
+      Float fl
+    with
+    | _ -> if str = "null" then Null else String str)
+
+let rec string_to_array str arr build =
+  let char_at = Bytes.get str 0 in
+  let rest = Bytes.sub str 1 ((Bytes.length str)-1 ) in
+  match char_at with
+    | '|' -> if build = "" then string_to_array rest arr ""
+      else string_to_array rest (Array.append arr [|string_to_wrap build|]) ""
+    | '\n' -> arr
+    | _ -> string_to_array rest arr (build^(Bytes.make 1 char_at))
+
 let string_to_dict s =
   failwith "TODO"
 
