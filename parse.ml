@@ -175,9 +175,11 @@ let parse_create (l: string list) : command =
 
 let parse_drop (l: string list) : command = Drop (List.nth l 1)
 
+let parse_open (l: string list) : command = Open (List.nth l 1)
+
 (*Parses the string that the user inputs into a type command*)
 let parse_input (s:string) : command =
-  let coms = ["SELECT"; "UPDATE"; "DELETE"; "INSERT"; "CREATE"; "DROP"] in
+  let coms = ["SELECT"; "UPDATE"; "DELETE"; "INSERT"; "CREATE"; "DROP"; "OPEN"] in
   let regexp = regexp " " in
   let l = split regexp s in
   let mapped = List.map (fun s -> strip s) l in
@@ -188,4 +190,5 @@ let parse_input (s:string) : command =
   |3 -> parse_insert mapped
   |4 -> parse_create mapped
   |5 -> parse_drop mapped
+  |6 -> parse_open mapped
   |_ -> failwith "Typo"
