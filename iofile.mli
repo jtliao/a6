@@ -1,3 +1,5 @@
+(*A wrapper that wraps the types we will allow in our database to allow them
+  to be added to one array*)
 type wrapper =
   |Int of int
   |Float of float
@@ -13,6 +15,13 @@ val read_file : string -> string
 (*Takes the string to be written and the name of the file to write to, then
   writes to the file and saves it*)
 val write_file : string -> string-> unit
+
+(*Convert a string array to string for printing*)
+val str_arr_to_string : string array -> string
+
+(*Takes in a column name -> index Hashtbl and turns it into an array, to
+  allow for easy printing.*)
+val hash_to_array : (string, int) Hashtbl.t -> string array
 
 (*Takes the string that is read from database and converts it into our own
   table data structure.*)

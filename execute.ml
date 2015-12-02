@@ -1,5 +1,7 @@
 open Iofile
-(*get * to print col header, constraint = null, make cols the same type?, catch errors in parse, try to only save if changed tables*)
+
+(*constraint = null, make cols the same type?, catch errors in parse
+get rid of commented out try/with*)
 type operator =
   |Eq of string * wrapper
   |Lt of string * wrapper
@@ -21,14 +23,6 @@ type command =
   |Create of string * string list
   |Drop of string
   |Open of string
-
-(*Gets the first index of a string that appears in a list.*)
-let get_index (l : 'a list) (s: 'a) : int =
-  let rec helper l s c =
-    match l with
-    |[] -> failwith "Empty list\n"
-    |h::tl -> if h = s then c else helper tl s (c+1)
-  in helper l s 0
 
 (*Return the list of indices of inputtedcolumns in the table*)
 let rec get_col_indices (cols : string list) (col_dict : ('a,'b) Hashtbl.t)
@@ -69,6 +63,8 @@ let rec cols_to_string (cols : string list) : string =
   |[] -> "|"
   |h::t -> "|"^h^(cols_to_string t)
 
+
+
 (*Constructs the string with the elements of an array*)
 let rec get_elements (arr: wrapper array) (cols : int list)
 (str : string ref) : unit =
@@ -81,10 +77,12 @@ let execute_select (cols : string list) (tab: string) (cons: constr option)
 (dict: ('a,'b) Hashtbl.t) : unit =
   try (
     let table_dicts = Hashtbl.find dict tab in
-    let index_list = if cols = ["*"]
-                     then all_col_indices 0 (Hashtbl.length (fst table_dicts))
-                     else get_col_indices cols (fst table_dicts) in
     let select_string = ref ((cols_to_string cols)^"\n")in
+    let index_list = if cols = ["*"]
+                     then (select_string := (str_arr_to_string
+                       (hash_to_array (fst table_dicts)))^"\n";
+                       all_col_indices 0 (Hashtbl.length (fst table_dicts)))
+                     else get_col_indices cols (fst table_dicts) in
     (*add column headers to string here*)
     for x = 0 to Hashtbl.length (snd table_dicts)-1 do
       let arr = Hashtbl.find (snd table_dicts) x in
@@ -100,6 +98,14 @@ let execute_select (cols : string list) (tab: string) (cons: constr option)
   )
   with
     |Not_found -> print_string "Invalid constraint.\n"
+
+(*[get_index l s] gets the first index of element [s] in [l]*)
+let get_index (l : 'a list) (s: 'a) : int =
+  let rec helper l s c =
+    match l with
+    |[] -> failwith "Empty list\n"
+    |h::tl -> if h = s then c else helper tl s (c+1)
+  in helper l s 0
 
 (*Update a single array with specified values in the specified columns*)
 let rec update_array (arr: wrapper array) (cols : int list) (orig : int list)
@@ -177,7 +183,7 @@ let execute_open (tab: string) (dict: ('a,'b) Hashtbl.t): ('a,'b) Hashtbl.t =
   let file = tab^".txt" in
   try (Hashtbl.replace dict tab (string_to_dict (read_file file)); dict)
   with
-  |Not_found -> (print_string "Table does not exist"; dict)
+  |_ -> (print_string "Table does not exist.\n"; dict)
 
 (*Check the validity of column names*)
 let rec check_cols (col : string list) (dict : ('a,'b) Hashtbl.t) : bool =
