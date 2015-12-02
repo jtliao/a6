@@ -1,5 +1,5 @@
 open Iofile
-(*get * to print col header, constraint = null, make cols the same type?, catch errors in parse, *)
+(*get * to print col header, constraint = null, make cols the same type?, catch errors in parse, try to only save if changed tables*)
 type operator =
   |Eq of string * wrapper
   |Lt of string * wrapper

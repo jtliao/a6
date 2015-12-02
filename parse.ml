@@ -6,7 +6,7 @@ open Str
 let get_index (l : string list) (s: string) : int =
   let rec helper l s c =
     match l with
-    |[] -> failwith "Empty list"
+    |[] -> failwith "Empty list\n"
     |h::tl -> if h = s then c else helper tl s (c+1)
   in helper l s 0
 
@@ -110,7 +110,7 @@ let gen_constraint_op (l: string list) : constr =
   |3 -> Op(Gt ((List.nth l 0), convert_to_wrapper (List.nth l 2)))
   |4 -> Op(GtEq ((List.nth l 0), convert_to_wrapper (List.nth l 2)))
   |5 -> Op(LtEq ((List.nth l 0), convert_to_wrapper (List.nth l 2)))
-  |_ -> failwith "Incorrect operator."
+  |_ -> failwith "Incorrect operator.\n"
 
 let rec gen_constraint (l: string list) : constr =
   let c = num_ops l in
@@ -124,8 +124,8 @@ let rec gen_constraint (l: string list) : constr =
               And(gen_constraint_op (sub_list l 0 2), gen_constraint (sub_list l 4 ((List.length l) - 1)))
               else if List.mem "OR" l then
               Or(gen_constraint_op (sub_list l 0 2), gen_constraint (sub_list l 4 ((List.length l) - 1)))
-              else failwith "Probably a typo or something"
-  |_ -> failwith "Too few/incorrect constraints"
+              else failwith "Probably a typo or something\n"
+  |_ -> failwith "Too few/incorrect constraints/incorrect spacing\n"
 
 
 
@@ -193,4 +193,4 @@ let parse_input (s:string) : command =
   |4 -> parse_create mapped
   |5 -> parse_drop mapped
   |6 -> parse_open mapped
-  |_ -> failwith "Typo"
+  |_ -> failwith "Typo\n"

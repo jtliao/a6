@@ -1,0 +1,8 @@
+|Name|Age|Gender|Year|
+|Jason|18|M|Sophomore|
+|Kevin|18|M|Junior|
+|Michael|31|M|Professor|
+|Clarkson|10|M|Teacher|
+|Chris|1|F|Sophomore|
+|Ben|19|M|Sophomore|
+|Christine|1123|F|3|
