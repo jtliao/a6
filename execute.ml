@@ -177,6 +177,12 @@ let execute_create (tab: string) (col : string list) (dict: ('a,'b) Hashtbl.t)
     Hashtbl.replace dict tab (create_col_dict col
       (Hashtbl.create (List.length col)) 0, Hashtbl.create 20); dict
 
+let execute_open (tab: string) (dict: ('a,'b) Hashtbl.t): ('a,'b) Hashtbl.t =
+  let file = tab^".txt" in
+  try (Hashtbl.replace dict tab (string_to_dict (read_file file)); dict)
+  with
+  |Not_found -> (print_string "Table does not exist"; dict)
+
 (*Check the validity of column names*)
 let rec check_cols (col : string list) (dict : ('a,'b) Hashtbl.t) : bool =
   match col with

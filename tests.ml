@@ -53,7 +53,6 @@ let tab_dict = Hashtbl.create 3
 let updated = execute (Create ("People", ["Names"])) tab_dict
 let new_col_dict = Hashtbl.create 3
 let new_arr_dict = Hashtbl.add new_col_dict "Names" 0; Hashtbl.create 10
-
 TEST_UNIT = dict_to_string (Hashtbl.find updated "People") ===
   dict_to_string (new_col_dict, new_arr_dict)
 
