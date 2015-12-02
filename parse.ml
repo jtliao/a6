@@ -25,6 +25,8 @@ let strip (s:string) : string =
     then String.sub s 1 ((String.length s) - 2)
    else if String.get s 0 = ''' && String.get s ((String.length s)-1) = ')'
     then String.sub s 1 ((String.length s) - 2)
+   else if String.get s 0 = '(' && String.get s ((String.length s) - 1) = ')'
+     then String.sub s 1 ((String.length s) - 2)
   else s
   (*Possibly include another case where the word s is surrounded by apostrophes*)
 
@@ -171,7 +173,7 @@ let parse_create (l: string list) : command =
   let table = List.nth l 2 in
     if List.length l = 3 then Create (table, [])
   else
-    Create(table, sub_list l 4 ((List.length l) - 1))
+    Create(table, sub_list l 3 ((List.length l) - 1))
 
 let parse_drop (l: string list) : command = Drop (List.nth l 1)
 
