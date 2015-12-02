@@ -1,5 +1,5 @@
 open Iofile
-(*get * to print col header, OPEN table*)
+(*get * to print col header, OPEN table, constraint = null*)
 type operator =
   |Eq of string * wrapper
   |Lt of string * wrapper
