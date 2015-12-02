@@ -1,5 +1,5 @@
 open Iofile
-(*get * to print col header, constraint = null*)
+(*get * to print col header, constraint = null, make cols the same type?, catch errors in parse, *)
 type operator =
   |Eq of string * wrapper
   |Lt of string * wrapper
@@ -45,17 +45,13 @@ let rec all_col_indices (ind : int) (len : int): int list =
 (*Evaluate if the inputted operator is true or false*)
 let eval_operator (arr : wrapper array) (op : operator)
 (col_dict : ('a,'b) Hashtbl.t) : bool=
-  try (
-    match op with
-    |Eq (c1, w1) -> arr.(Hashtbl.find col_dict c1) = w1
-    |Lt (c2, w2) -> arr.(Hashtbl.find col_dict c2) < w2
-    |Gt (c3, w3) -> arr.(Hashtbl.find col_dict c3) > w3
-    |LtEq (c4, w4) -> arr.(Hashtbl.find col_dict c4) <= w4
-    |GtEq (c5, w5) -> arr.(Hashtbl.find col_dict c5) >= w5
-    |NotEq (c6, w6) -> arr.(Hashtbl.find col_dict c6) <> w6
-  )
-  with
-  |Not_found -> raise Not_found
+  match op with
+  |Eq (c1, w1) -> arr.(Hashtbl.find col_dict c1) = w1
+  |Lt (c2, w2) -> arr.(Hashtbl.find col_dict c2) < w2
+  |Gt (c3, w3) -> arr.(Hashtbl.find col_dict c3) > w3
+  |LtEq (c4, w4) -> arr.(Hashtbl.find col_dict c4) <= w4
+  |GtEq (c5, w5) -> arr.(Hashtbl.find col_dict c5) >= w5
+  |NotEq (c6, w6) -> arr.(Hashtbl.find col_dict c6) <> w6
 
 (*Evaluate if the inputted constraint is true or false*)
 let rec eval_constraint (arr: wrapper array) (cons: constr)
@@ -103,7 +99,7 @@ let execute_select (cols : string list) (tab: string) (cons: constr option)
     done; print_string !select_string
   )
   with
-    |Not_found  -> print_string "Invalid constraint query.\n"
+    |Not_found -> print_string "Invalid constraint.\n"
 
 (*Update a single array with specified values in the specified columns*)
 let rec update_array (arr: wrapper array) (cols : int list) (orig : int list)
@@ -146,7 +142,7 @@ let execute_delete (tab : string) (cons : constr)
 (*Execute the insert command on [tab] and return the updated hashtable*)
 let execute_insert (tab: string) (cols : string list) (wrap: wrapper list)
 (dict: ('a,'b) Hashtbl.t) : ('a,'b) Hashtbl.t =
-  try (
+  (*try( *)
     let table_dicts = Hashtbl.find dict tab in
     let index_list = get_col_indices cols (fst table_dicts) in
     let arr_length = Hashtbl.length (fst table_dicts) in
@@ -160,9 +156,9 @@ let execute_insert (tab: string) (cols : string list) (wrap: wrapper list)
     done; Hashtbl.replace (snd table_dicts)
       (Hashtbl.length (snd table_dicts)) arr;
       Hashtbl.replace dict tab (fst table_dicts, snd table_dicts); dict
-  )
+  (* )
   with
-    |_ -> print_string "Invalid INSERT query.\n"; dict
+    |_ -> print_string "Invalid INSERT query.\n"; dict*)
 
 (*Create a table with specified columns in them*)
 let rec create_col_dict (cols : string list) (col_dict: ('a,'b) Hashtbl.t)

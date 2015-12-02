@@ -10,8 +10,9 @@ let save_tables (new_dict: ('a,'b) Hashtbl.t) (dict: ('a,'b) Hashtbl.t): unit =
 
 let rec run_repl (dict: ('a,'b) Hashtbl.t) : unit =
   let user_command = read_line () in
-  let new_dict = execute (parse_input user_command) dict in
-  save_tables new_dict dict ; run_repl (new_dict)
+  let new_dict = try (execute (parse_input user_command) dict )
+                with |Failure e -> (print_string e; dict)
+   in run_repl (new_dict)
 
 (*Read the initial table and run the REPL*)
 let _ =
