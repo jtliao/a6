@@ -20,6 +20,7 @@ type command =
   |Insert of string * string list * wrapper list
   |Create of string * string list
   |Drop of string
+  |Open of string
 
 (*Gets the first index of a string that appears in a list.*)
 let get_index (l : 'a list) (s: 'a) : int =
@@ -214,3 +215,4 @@ let execute (com:command) (dict: ('a,'b) Hashtbl.t) : ('a,'b) Hashtbl.t =
   |Drop tab -> if Hashtbl.mem dict tab
                then (Hashtbl.remove dict tab; dict)
                else (print_string "Table does not exist\n"; dict)
+  |Open tab -> failwith ""
