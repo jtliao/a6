@@ -2,16 +2,6 @@ open Execute
 open Iofile
 open Assertions
 
-(*type command =
-  |Select of string list * string * constr option
-  |Update of string * string list * wrapper list * constr
-  |Delete of string * constr
-  |Insert of string * string list * wrapper list
-  |Create of string * string list
-  |Drop of string
-
----this stuff above is just for reference, will delete later*)
-
 (*****************************UNIT TESTS FOR MAIN*****************************)
 
 (*Tests for update*)
@@ -23,10 +13,9 @@ let updated = Hashtbl.add tab_dict "People" (col_dict, arr_dict);
   execute (Update("People", ["Name"], [String "Jason"],
   Op (Eq ("Name", String "Bob")))) tab_dict
 let new_arr_dict = Hashtbl.create 3
-let new_tab_dict = Hashtbl.add new_arr_dict 0 [|String "Jason"|];
-  Hashtbl.create 3
-TEST_UNIT = Hashtbl.add new_tab_dict "People" (col_dict, new_arr_dict);
-  updated===new_tab_dict
+TEST_UNIT = Hashtbl.add new_arr_dict 0 [|String "Jason"|];
+  dict_to_string (Hashtbl.find updated "People") ===
+  dict_to_string (col_dict, new_arr_dict)
 
 (*#2, updating a single element with multiple constraints*)
 let col_dict = Hashtbl.create 3
@@ -38,10 +27,10 @@ let updated = Hashtbl.add tab_dict "People" (col_dict, arr_dict);
   execute (Update("People", ["Name"; "Age"], [String "Jason"; Int 3],
   And (Op (Eq ("Name", String "Bob")), Op (Eq ("Age", Int 2))))) tab_dict
 let new_arr_dict = Hashtbl.create 3
-let new_tab_dict = Hashtbl.add new_arr_dict 0 [|String "Bob"; Int 1|];
-  Hashtbl.add new_arr_dict 1 [|String "Jason"; Int 3|]; Hashtbl.create 3
-TEST_UNIT = Hashtbl.add new_tab_dict "People" (col_dict, new_arr_dict);
-  updated===new_tab_dict
+TEST_UNIT = Hashtbl.add new_arr_dict 0 [|String "Bob"; Int 1|];
+  Hashtbl.add new_arr_dict 1 [|String "Jason"; Int 3|];
+  dict_to_string (Hashtbl.find updated "People") ===
+  dict_to_string (col_dict, new_arr_dict)
 
 (*#3, updating multiple elements*)
 let col_dict = Hashtbl.create 3
@@ -53,10 +42,10 @@ let updated = Hashtbl.add tab_dict "People" (col_dict, arr_dict);
   execute (Update("People", ["Name"; "Age"], [String "Jason"; Int 3],
   (Op (Eq ("Name", String "Bob"))))) tab_dict
 let new_arr_dict = Hashtbl.create 3
-let new_tab_dict = Hashtbl.add new_arr_dict 0 [|String "Jason"; Int 3|];
-  Hashtbl.add new_arr_dict 1 [|String "Jason"; Int 3|]; Hashtbl.create 3
-TEST_UNIT = Hashtbl.add new_tab_dict "People" (col_dict, new_arr_dict);
-  updated===new_tab_dict
+TEST_UNIT = Hashtbl.add new_arr_dict 0 [|String "Jason"; Int 3|];
+  Hashtbl.add new_arr_dict 1 [|String "Jason"; Int 3|];
+  dict_to_string (Hashtbl.find updated "People") ===
+  dict_to_string (col_dict, new_arr_dict)
 
 (*Tests for create*)
 (*#1, creating one table*)
@@ -67,11 +56,6 @@ let new_arr_dict = Hashtbl.add new_col_dict "Names" 0; Hashtbl.create 10
 
 TEST_UNIT = dict_to_string (Hashtbl.find updated "People") ===
   dict_to_string (new_col_dict, new_arr_dict)
-(*let new_col_dict = Hashtbl.create 3
-let new_arr_dict = Hashtbl.add new_col_dict "Names" 0; Hashtbl.create 10
-let new_tab_dict = Hashtbl.create 3
-TEST_UNIT = Hashtbl.add new_tab_dict "People" (new_col_dict, new_arr_dict);
-  updated===new_tab_dict*)
 
 (*Tests for insert*)
 (*#1, inserting one element with one column/value*)
@@ -86,10 +70,6 @@ let new_tab_dict = Hashtbl.add new_arr_dict 0 [|String "Jason"|];
 TEST_UNIT = Hashtbl.add new_tab_dict "People" (col_dict, new_arr_dict);
   dict_to_string (Hashtbl.find updated "People") ===
   dict_to_string (col_dict, new_arr_dict)
-(*TEST_UNIT = print_string (dict_to_string (Hashtbl.find updated "People"));
-  Hashtbl.add new_tab_dict "People" (col_dict, new_arr_dict);
-  print_string (dict_to_string (col_dict, new_arr_dict));
-  updated===new_tab_dict*)
 
 (*#2, inserting one element with more than one column/value*)
 let col_dict = Hashtbl.create 3
@@ -104,10 +84,6 @@ let new_tab_dict = Hashtbl.add new_arr_dict 0 [|String "Jason"; Int 10|];
 TEST_UNIT = Hashtbl.add new_tab_dict "People" (col_dict, new_arr_dict);
   dict_to_string (Hashtbl.find updated "People") ===
   dict_to_string (col_dict, new_arr_dict)
-(*TEST_UNIT = print_string (dict_to_string (Hashtbl.find updated "People"));
-  Hashtbl.add new_tab_dict "People" (col_dict, new_arr_dict);
-  print_string (dict_to_string (col_dict, new_arr_dict));
-  updated===new_tab_dict*)
 
 (*#3, inserting one element with some values, some nulls*)
 let col_dict = Hashtbl.create 3
@@ -122,10 +98,6 @@ let new_tab_dict = Hashtbl.add new_arr_dict 0 [|String "Jason"; Null|];
 TEST_UNIT = Hashtbl.add new_tab_dict "People" (col_dict, new_arr_dict);
   dict_to_string (Hashtbl.find updated "People") ===
   dict_to_string (col_dict, new_arr_dict)
-(*TEST_UNIT = print_string (dict_to_string (Hashtbl.find updated "People"));
-  Hashtbl.add new_tab_dict "People" (col_dict, new_arr_dict);
-  print_string (dict_to_string (col_dict, new_arr_dict));
-  updated===new_tab_dict*)
 
 (*Tests for drop*)
 (*#1, dropping the only table*)
