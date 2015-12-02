@@ -1,5 +1,5 @@
 open Iofile
-(*get * to print col header, OPEN table, constraint = null*)
+(*get * to print col header, constraint = null*)
 type operator =
   |Eq of string * wrapper
   |Lt of string * wrapper
@@ -221,4 +221,4 @@ let execute (com:command) (dict: ('a,'b) Hashtbl.t) : ('a,'b) Hashtbl.t =
   |Drop tab -> if Hashtbl.mem dict tab
                then (Hashtbl.remove dict tab; dict)
                else (print_string "Table does not exist\n"; dict)
-  |Open tab -> failwith ""
+  |Open tab -> execute_open tab dict

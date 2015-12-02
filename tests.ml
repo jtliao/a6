@@ -195,4 +195,4 @@ let updated = print_string "\nSELECT * FROM People WHERE Name = Jason\n";
   execute (Select(["*"], "People",
   Some (Op (Eq ("Name", String "JJ"))))) tab_dict
 
-let x = print_string "All tests run.\n"
+let _ = print_string "All tests run.\n"
