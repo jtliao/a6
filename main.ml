@@ -2,9 +2,17 @@ open Iofile
 open Execute
 open Parse
 
+(*After executing a command, save tables that have been changed*)
+let save_tables (new_dict: ('a,'b) Hashtbl.t) (dict: ('a,'b) Hashtbl.t): unit =
+  let f str tabs = if tabs <> Hashtbl.find dict str
+                   then write_file (str^".txt") (dict_to_string tabs)
+                   else () in
+  Hashtbl.iter f new_dict
+
 let rec run_repl (dict: ('a,'b) Hashtbl.t) : unit =
   let user_command = read_line () in
-  run_repl (execute (parse_input user_command) dict)
+  let new_dict = execute (parse_input user_command) dict in
+  save_tables new_dict dict ; run_repl (new_dict)
 
 (*Read the initial table and run the REPL*)
 let _ =

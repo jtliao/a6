@@ -1,5 +1,5 @@
 open Iofile
-(*printing of select, OPEN table*)
+(*get * to print col header, OPEN table*)
 type operator =
   |Eq of string * wrapper
   |Lt of string * wrapper
@@ -25,7 +25,7 @@ type command =
 let get_index (l : 'a list) (s: 'a) : int =
   let rec helper l s c =
     match l with
-    |[] -> failwith "Empty list"
+    |[] -> failwith "Empty list\n"
     |h::tl -> if h = s then c else helper tl s (c+1)
   in helper l s 0
 
@@ -66,11 +66,18 @@ let rec eval_constraint (arr: wrapper array) (cons: constr)
   |Or (c3, c4)-> (eval_constraint arr c3 col_dict) ||
                   (eval_constraint arr c4 col_dict)
 
-(*Constructs the string with the elements of an array*)
-let rec get_elements (arr: wrapper array) (cols : int list) (str : string ref) : unit =
+(*Creates a string out of given columns to be printed*)
+let rec cols_to_string (cols : string list) : string =
   match cols with
-  |[] -> ()
-  |h::t -> (str:= !str ^ wrap_to_string arr.(h)^"|"; get_elements arr t str)
+  |[] -> "|"
+  |h::t -> "|"^h^(cols_to_string t)
+
+(*Constructs the string with the elements of an array*)
+let rec get_elements (arr: wrapper array) (cols : int list)
+(str : string ref) : unit =
+  match cols with
+  |[] -> str:= !str ^ "|"
+  |h::t -> (str:= !str ^ "|" ^ wrap_to_string arr.(h); get_elements arr t str)
 
 (*Print the string with the elements queried by the select command on [tab]*)
 let execute_select (cols : string list) (tab: string) (cons: constr option)
@@ -80,12 +87,13 @@ let execute_select (cols : string list) (tab: string) (cons: constr option)
     let index_list = if cols = ["*"]
                      then all_col_indices 0 (Hashtbl.length (fst table_dicts))
                      else get_col_indices cols (fst table_dicts) in
-    let select_string = ref "" in
+    let select_string = ref ((cols_to_string cols)^"\n")in
     (*add column headers to string here*)
-    for x = 0 to Hashtbl.length (snd table_dicts) do
+    for x = 0 to Hashtbl.length (snd table_dicts)-1 do
       let arr = Hashtbl.find (snd table_dicts) x in
       match cons with
-      |None -> get_elements arr index_list select_string
+      |None -> get_elements arr index_list select_string;
+                 select_string:= !select_string^"\n"
       |Some c -> if eval_constraint arr c (fst table_dicts)
                  then
                    (get_elements arr index_list select_string;
@@ -94,7 +102,7 @@ let execute_select (cols : string list) (tab: string) (cons: constr option)
     done; print_string !select_string
   )
   with
-    |Not_found  -> print_string "Invalid constraint query."
+    |Not_found  -> print_string "Invalid constraint query.\n"
 
 (*Update a single array with specified values in the specified columns*)
 let rec update_array (arr: wrapper array) (cols : int list) (orig : int list)
@@ -127,11 +135,10 @@ let execute_delete (tab : string) (cons : constr)
     let arr = Hashtbl.find (snd table_dicts) !cntr in
     if eval_constraint arr cons (fst table_dicts)
     then
-      if !cntr <= !size-2 then
-        (for i = !cntr to !size-2 do
-          Hashtbl.add (snd table_dicts) i (Hashtbl.find (snd table_dicts) (i+1))
-        done; Hashtbl.remove (snd table_dicts) (!size-1); size:= !size -1)
-      else ()
+      (for i = !cntr to !size-2 do
+        Hashtbl.replace (snd table_dicts) i
+          (Hashtbl.find (snd table_dicts) (i+1))
+      done; Hashtbl.remove (snd table_dicts) (!size-1); size:= !size -1)
     else incr cntr
   done; dict
 
@@ -140,32 +147,33 @@ let execute_insert (tab: string) (cols : string list) (wrap: wrapper list)
 (dict: ('a,'b) Hashtbl.t) : ('a,'b) Hashtbl.t =
   try (
     let table_dicts = Hashtbl.find dict tab in
-    let col_indices = get_col_indices cols (fst table_dicts) in
+    let index_list = get_col_indices cols (fst table_dicts) in
     let arr_length = Hashtbl.length (fst table_dicts) in
     let arr = Array.make arr_length Null in
     for x = 0 to (arr_length-1) do
-      if List.exists (fun n -> n=x) col_indices
+      if List.exists (fun n -> n=x) index_list
       then
-        let ind = get_index col_indices x in
+        let ind = get_index index_list x in
         arr.(x) <- (List.nth wrap ind)
       else ()
-    done; Hashtbl.add (snd table_dicts) (Hashtbl.length (snd table_dicts)) arr;
-      Hashtbl.add dict tab (fst table_dicts, snd table_dicts); dict
+    done; Hashtbl.replace (snd table_dicts)
+      (Hashtbl.length (snd table_dicts)) arr;
+      Hashtbl.replace dict tab (fst table_dicts, snd table_dicts); dict
   )
   with
-    |_ -> print_string "Invalid INSERT query."; dict
+    |_ -> print_string "Invalid INSERT query.\n"; dict
 
 (*Create a table with specified columns in them*)
 let rec create_col_dict (cols : string list) (col_dict: ('a,'b) Hashtbl.t)
-(index : int): ('a,'b) Hashtbl.t=
+(ind : int): ('a,'b) Hashtbl.t=
   match cols with
   |[] -> col_dict
-  |h::t -> Hashtbl.add col_dict h index; create_col_dict t col_dict (index+1)
+  |h::t -> Hashtbl.replace col_dict h ind; create_col_dict t col_dict (ind+1)
 
 (*Execute the create command on [tab] and return the updated hashtable*)
 let execute_create (tab: string) (col : string list) (dict: ('a,'b) Hashtbl.t)
 : ('a,'b) Hashtbl.t =
-    Hashtbl.add dict tab (create_col_dict col
+    Hashtbl.replace dict tab (create_col_dict col
       (Hashtbl.create (List.length col)) 0, Hashtbl.create 20); dict
 
 (*Check the validity of column names*)
@@ -182,12 +190,12 @@ let check_command (col : string list) (tab : string)
     let table_dict = Hashtbl.find dict tab in
     if check_cols col (fst table_dict)
     then true
-    else (print_string "Column(s) do(es) not exist in this table."; false)
-  else (print_string "Table does not exist."; false)
+    else (print_string "Column(s) do(es) not exist in this table.\n"; false)
+  else (print_string "Table does not exist.\n"; false)
 
 let execute (com:command) (dict: ('a,'b) Hashtbl.t) : ('a,'b) Hashtbl.t =
   match com with
-  |Select (col, tab, cons) -> if check_command col tab dict
+  |Select (col, tab, cons) -> if check_command col tab dict || col = ["*"]
                               then (execute_select col tab cons dict; dict)
                               else dict
   |Update (tab, col, vals, cons) -> if check_command col tab dict
@@ -201,8 +209,8 @@ let execute (com:command) (dict: ('a,'b) Hashtbl.t) : ('a,'b) Hashtbl.t =
                               else dict
   |Create (tab, col) -> if Hashtbl.mem dict tab
                         then (print_string "Table already exists,
-                           please choose a different name"; dict)
+                           please choose a different name\n"; dict)
                         else execute_create tab col dict
   |Drop tab -> if Hashtbl.mem dict tab
                then (Hashtbl.remove dict tab; dict)
-               else (print_string "Table does not exist"; dict)
+               else (print_string "Table does not exist\n"; dict)
