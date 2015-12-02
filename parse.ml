@@ -2,11 +2,6 @@ open Execute
 open Iofile
 open Str
 
-(*let rec get_index (val : 'a) (lst: 'a list) : int =
-  match lst with
-  |[] -> raise Not_found
-  |h::t -> if val = h then 0 else 1 + (get_index val t)*)
-
 (*Gets the first index of a string that appears in a list. Used in parse_input.*)
 let get_index (l : string list) (s: string) : int =
   let rec helper l s c =
@@ -183,10 +178,10 @@ let parse_drop (l: string list) : command = Drop (List.nth l 1)
 (*Parses the string that the user inputs into a type command*)
 let parse_input (s:string) : command =
   let coms = ["SELECT"; "UPDATE"; "DELETE"; "INSERT"; "CREATE"; "DROP"] in
-  let regexp = Str.regexp " " in
-  let l = Str.split regexp s in
+  let regexp = regexp " " in
+  let l = split regexp s in
   let mapped = List.map (fun s -> strip s) l in
-  match get_index coms (List.nth l 0) with
+  match get_index coms (List.nth mapped 0) with
   |0 -> parse_select mapped
   |1 -> parse_update mapped
   |2 -> parse_delete mapped
