@@ -17,7 +17,7 @@ let strip (s:string) : string =
     then String.sub s 1 ((String.length s) - 2)
   else if String.get s ((String.length s) - 1) = ','
     then String.sub s 0 ((String.length s) - 1)
-  else if String.get s ((String.length s) - 1) = ')'
+  else if String.get s ((String.length s) - 1) = ')' && String.get s 0 <> ')'
     then String.sub s 0 ((String.length s) - 1)
   else if String.get s 0 = ''' && String.get s ((String.length s)-1) = '''
     then String.sub s 1 ((String.length s) - 2)
