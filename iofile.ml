@@ -53,14 +53,16 @@ let array_to_hashtbl arr =
   tbl
 
 let rec string_to_dict_help str header rows rownum =
-  let nextstart = (Bytes.index str '\n')+1 in
-  let next = Bytes.sub str nextstart ((Bytes.length str)-nextstart) in
   if str = "" then (header,rows)
   else if header = (Hashtbl.create 0) then
+    let nextstart = (Bytes.index str '\n')+1 in
+    let next = Bytes.sub str nextstart ((Bytes.length str)-nextstart) in
     let columns = Array.map wrap_to_string (string_to_array str [||] "") in
     let coltbl = array_to_hashtbl columns in
     string_to_dict_help next coltbl rows 0
   else
+    let nextstart = (Bytes.index str '\n')+1 in
+    let next = Bytes.sub str nextstart ((Bytes.length str)-nextstart) in
     let arr = string_to_array str [||] "" in
     (Hashtbl.replace rows rownum arr);
     string_to_dict_help next header rows (rownum+1)
