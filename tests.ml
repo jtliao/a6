@@ -57,6 +57,19 @@ let new_tab_dict = Hashtbl.add new_arr_dict 0 [|String "Jason"; Int 3|];
 TEST_UNIT = Hashtbl.add new_tab_dict "People" (col_dict, new_arr_dict);
   updated===new_tab_dict
 
+(*Tests for create*)
+(*#1, creating one table*)
+let tab_dict = Hashtbl.create 3
+let updated = execute (Create ("People", ["Names"])) tab_dict
+let new_col_dict = Hashtbl.create 3
+let new_arr_dict = Hashtbl.add new_col_dict "Names" 0; Hashtbl.create 10
+TEST_UNIT = Hashtbl.find updated "People" === (new_col_dict, new_arr_dict)
+(*let new_col_dict = Hashtbl.create 3
+let new_arr_dict = Hashtbl.add new_col_dict "Names" 0; Hashtbl.create 10
+let new_tab_dict = Hashtbl.create 3
+TEST_UNIT = Hashtbl.add new_tab_dict "People" (new_col_dict, new_arr_dict);
+  updated===new_tab_dict*)
+
 (*Tests for insert*)
 (*#1, inserting one element with one column/value*)
 let col_dict = Hashtbl.create 3
@@ -96,7 +109,7 @@ let new_tab_dict = Hashtbl.add new_arr_dict 0 [|String "Jason"; Null|];
 TEST_UNIT = Hashtbl.add new_tab_dict "People" (col_dict, new_arr_dict);
   updated===new_tab_dict
 
-(*Tests for create*)
+
 
 (*Tests for drop*)
 (*#1, dropping the only table*)

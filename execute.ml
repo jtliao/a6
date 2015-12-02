@@ -70,7 +70,7 @@ let rec eval_constraint (arr: wrapper array) (cons: constr)
 let rec get_elements (arr: wrapper array) (cols : int list) (str : string ref) : unit =
   match cols with
   |[] -> ()
-  |h::t -> (str:= !str ^"        "^ wrap_to_string arr.(h); get_elements arr t str)
+  |h::t -> (str:= !str ^ wrap_to_string arr.(h)^"|"; get_elements arr t str)
 
 (*Print the string with the elements queried by the select command on [tab]*)
 let execute_select (cols : string list) (tab: string) (cons: constr option)
