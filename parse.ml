@@ -168,10 +168,10 @@ let parse_insert (l: string list) : command =
   Insert(table, columns, w_list)
 
 let parse_create (l: string list) : command =
-  let table = List.nth l 1 in
-    if List.length l = 2 then Create (table, [])
+  let table = List.nth l 2 in
+    if List.length l = 3 then Create (table, [])
   else
-    Create(table, sub_list l 2 ((List.length l) - 1))
+    Create(table, sub_list l 4 ((List.length l) - 1))
 
 let parse_drop (l: string list) : command = Drop (List.nth l 1)
 
