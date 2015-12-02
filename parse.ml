@@ -78,6 +78,7 @@ let num_ops (l : string list) : int =
 let convert_to_wrapper (s: string) : wrapper =
   if is_int s then Int (decide_int s)
 else if is_float s then Float (decide_float s)
+else if s = "null" then Null
 else String s
 
 (*Returns the list of column names in an Update command.*)
