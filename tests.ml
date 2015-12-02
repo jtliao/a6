@@ -194,5 +194,24 @@ let updated = print_string "\nSELECT * FROM People WHERE Name = Jason\n";
   Hashtbl.add tab_dict "People" (col_dict, arr_dict);
   execute (Select(["*"], "People",
   Some (Op (Eq ("Name", String "JJ"))))) tab_dict
+(*Test write_file, read_file, string_to_dict, dict_to_string*)
+let col_dict = Hashtbl.create 3
+let arr_dict = Hashtbl.add col_dict "Name" 0;
+  Hashtbl.add col_dict "Age" 1; Hashtbl.create 3
+let tab_dict = Hashtbl.add arr_dict 0 [|String "Bob"; Int 1|];
+  Hashtbl.add arr_dict 1 [|String "Bob"; Int 2|]; Hashtbl.create 3
+let updated = Hashtbl.add tab_dict "People" (col_dict, arr_dict);
+  execute (Update("People", ["Name"; "Age"], [String "Jason"; Int 3],
+  And (Op (Eq ("Name", String "Bob")), Op (Eq ("Age", Int 2))))) tab_dict
+let people = Hashtbl.find updated "People"
+(*make empty file and read it*)
+TEST_UNIT = write_file "" "testing.txt";
+  read_file "testing.txt" === ""
+(*write table into file and check string*)
+TEST_UNIT = let pstr = dict_to_string people in
+  write_file pstr "testing.txt";
+  read_file "testing.txt" === "|Name|Age|\n|Bob|1|\n|Jason|3|\n"
+(*read string from file and convert to dict. check that it is unchanged*)
+TEST_UNIT = string_to_dict (read_file "testing.txt") === people
 
 let _ = print_string "All tests run.\n"
