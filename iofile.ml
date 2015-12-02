@@ -27,5 +27,20 @@ let write_file changes filename =
 let string_to_dict s =
   failwith "TODO"
 
-let dict_to_string d =
-  failwith "TODO"
+let array_to_string arr =
+  Array.fold_left (fun acc x -> acc^(wrap_to_string x)^"|") "|" arr
+
+let str_arr_to_string arr =
+  Array.fold_left (fun acc x -> acc^x^"|") "|" arr
+
+let hash_to_array tbl =
+  let arr = Array.make (Hashtbl.length tbl) "Null" in
+  Hashtbl.iter (fun k v -> Array.set arr v k) tbl;
+  arr
+
+let dict_to_string (t1,t2) =
+  let dictstring = ref ((str_arr_to_string (hash_to_array t1))^"\n") in
+  for i = 0 to (Hashtbl.length t2 - 1) do
+    dictstring := !dictstring^(array_to_string (Hashtbl.find t2 i))^"\n"
+  done;
+  !dictstring
