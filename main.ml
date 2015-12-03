@@ -11,7 +11,8 @@ let rec run_repl (dict: ('a,'b) Hashtbl.t) : unit =
   let user_command = read_line () in
   let new_dict = try (execute (parse_input user_command) dict)
                  with
-                 |Failure e -> (print_string e; dict) in
+                 |Failure e -> if e <> "nth" then (print_string e; dict)
+                               else dict in
    save_tables new_dict dict; run_repl (new_dict)
 
 (*Read the initial table and run the REPL*)

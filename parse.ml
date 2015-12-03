@@ -6,7 +6,7 @@ open Str
 let get_index (l : string list) (s: string) : int =
   let rec helper l s c =
     match l with
-    |[] -> failwith "Empty list\n"
+    |[] -> failwith "Invalid query.\n"
     |h::tl -> if h = s then c else helper tl s (c+1)
   in helper l s 0
 
@@ -126,7 +126,7 @@ let rec gen_constraint (l: string list) : constr =
               else if List.mem "OR" l then
               Or(gen_constraint_op (sub_list l 0 2), gen_constraint (sub_list l 4 ((List.length l) - 1)))
               else failwith "Probably a typo or something\n"
-  |_ -> failwith "Too few/incorrect constraints/incorrect spacing\n"
+  |_ -> failwith "Too few/incorrect constraints or incorrect spacing\n"
 
 
 

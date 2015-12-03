@@ -6,3 +6,4 @@
 |Chris|1|F|Sophomore|
 |Ben|19|M|Sophomore|
 |Christine|1123|F|3|
+|Ken|null|null|null|

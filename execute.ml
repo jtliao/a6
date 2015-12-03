@@ -1,6 +1,6 @@
 open Iofile
 
-(*constraint = null, make cols the same type?, catch errors in parse
+(* make cols the same type?, catch errors in parse, INSERT INTO test (Name) VALUES 12, 13
 get rid of commented out try/with*)
 type operator =
   |Eq of string * wrapper
@@ -63,8 +63,6 @@ let rec cols_to_string (cols : string list) : string =
   |[] -> "|"
   |h::t -> "|"^h^(cols_to_string t)
 
-
-
 (*Constructs the string with the elements of an array*)
 let rec get_elements (arr: wrapper array) (cols : int list)
 (str : string ref) : unit =
@@ -103,7 +101,7 @@ let execute_select (cols : string list) (tab: string) (cons: constr option)
 let get_index (l : 'a list) (s: 'a) : int =
   let rec helper l s c =
     match l with
-    |[] -> failwith "Empty list\n"
+    |[] -> failwith "Empty list.\n"
     |h::tl -> if h = s then c else helper tl s (c+1)
   in helper l s 0
 
@@ -118,32 +116,39 @@ let rec update_array (arr: wrapper array) (cols : int list) (orig : int list)
 (*Execute the update command on [tab] and return the updated hashtable*)
 let execute_update (tab : string) (cols : string list) (vals: wrapper list)
 (cons : constr) (dict : ('a,'b) Hashtbl.t) : ('a,'b) Hashtbl.t =
-  let table_dicts = Hashtbl.find dict tab in
-  let index_list = get_col_indices cols (fst table_dicts) in
-  for x = 0 to Hashtbl.length (snd table_dicts)-1 do
-    let arr = Hashtbl.find (snd table_dicts) x in
-    if eval_constraint arr cons (fst table_dicts)
-    then
-      update_array arr index_list index_list vals cons
-    else ()
-  done; dict
+  try(
+    let table_dicts = Hashtbl.find dict tab in
+    let index_list = get_col_indices cols (fst table_dicts) in
+    for x = 0 to Hashtbl.length (snd table_dicts)-1 do
+      let arr = Hashtbl.find (snd table_dicts) x in
+      if eval_constraint arr cons (fst table_dicts)
+      then
+        update_array arr index_list index_list vals cons
+      else ()
+    done; dict)
+  with
+  |_ -> print_string "Invalid constraint.\n"; dict
+
 
 (*Execute the delete command on [tab] and return the updated hashtable*)
 let execute_delete (tab : string) (cons : constr)
 (dict : ('a,'b) Hashtbl.t) : ('a,'b) Hashtbl.t =
-  let table_dicts = Hashtbl.find dict tab in
-  let cntr = ref 0 in
-  let size = ref (Hashtbl.length (snd table_dicts)) in
-  while !cntr <= !size-1 do
-    let arr = Hashtbl.find (snd table_dicts) !cntr in
-    if eval_constraint arr cons (fst table_dicts)
-    then
-      (for i = !cntr to !size-2 do
-        Hashtbl.replace (snd table_dicts) i
-          (Hashtbl.find (snd table_dicts) (i+1))
-      done; Hashtbl.remove (snd table_dicts) (!size-1); size:= !size -1)
-    else incr cntr
-  done; dict
+  try(
+    let table_dicts = Hashtbl.find dict tab in
+    let cntr = ref 0 in
+    let size = ref (Hashtbl.length (snd table_dicts)) in
+    while !cntr <= !size-1 do
+      let arr = Hashtbl.find (snd table_dicts) !cntr in
+      if eval_constraint arr cons (fst table_dicts)
+      then
+        (for i = !cntr to !size-2 do
+          Hashtbl.replace (snd table_dicts) i
+            (Hashtbl.find (snd table_dicts) (i+1))
+        done; Hashtbl.remove (snd table_dicts) (!size-1); size:= !size -1)
+      else incr cntr
+    done; dict)
+  with
+  |_ -> print_string "Invalid constraint.\n"; dict
 
 (*Execute the insert command on [tab] and return the updated hashtable*)
 let execute_insert (tab: string) (cols : string list) (wrap: wrapper list)
@@ -204,7 +209,7 @@ let check_command (col : string list) (tab : string)
 
 let execute (com:command) (dict: ('a,'b) Hashtbl.t) : ('a,'b) Hashtbl.t =
   match com with
-  |Select (col, tab, cons) -> if check_command col tab dict || col = ["*"]
+  |Select (col, tab, cons) -> if col = ["*"] || check_command col tab dict
                               then (execute_select col tab cons dict; dict)
                               else dict
   |Update (tab, col, vals, cons) -> if check_command col tab dict
@@ -212,7 +217,7 @@ let execute (com:command) (dict: ('a,'b) Hashtbl.t) : ('a,'b) Hashtbl.t =
                               else dict
   |Delete (tab, cons) -> if Hashtbl.mem dict tab
                          then execute_delete tab cons dict
-                         else (print_string "Table does not exist."; dict)
+                         else (print_string "Table does not exist.\n"; dict)
   |Insert (tab, col, wrap) -> if check_command col tab dict
                               then execute_insert tab col wrap dict
                               else dict
