@@ -36,7 +36,8 @@ let string_to_wrap (str: string): wrapper =
     with
     | _ -> if str = "null" then Null else String str)
 
-let rec string_to_array (str: string) (arr) (build) =
+let rec string_to_array (str: string) (arr: wrapper array) (build: string):
+  wrapper array =
   let char_at = Bytes.get str 0 in
   let rest = Bytes.sub str 1 ((Bytes.length str)-1 ) in
   match char_at with
@@ -45,14 +46,16 @@ let rec string_to_array (str: string) (arr) (build) =
     | '\n' -> arr
     | _ -> string_to_array rest arr (build^(Bytes.make 1 char_at))
 
-let array_to_hashtbl (arr) =
+let array_to_hashtbl (arr: string array): (string,int) Hashtbl.t =
   let tbl = Hashtbl.create (Array.length arr) in
   for i = 0 to (Array.length arr - 1) do
     Hashtbl.replace tbl arr.(i) i
   done;
   tbl
 
-let rec string_to_dict_help (str: string) (header) (rows) (rownum: int) =
+let rec string_to_dict_help (str: string) (header: (string,int) Hashtbl.t)
+  (rows: (int, wrapper array) Hashtbl.t) (rownum: int): (string,int) Hashtbl.t *
+  (int, wrapper array) Hashtbl.t =
   if str = "" then (header,rows)
   else if header = (Hashtbl.create 0) then
     let nextstart = (Bytes.index str '\n')+1 in
@@ -77,7 +80,7 @@ let array_to_string (arr: wrapper array): string =
 let str_arr_to_string (arr: string array): string =
   Array.fold_left (fun acc x -> acc^x^"|") "|" arr
 
-let hash_to_array (tbl) =
+let hash_to_array (tbl: (string, int) Hashtbl.t): string array =
   let arr = Array.make (Hashtbl.length tbl) "Null" in
   Hashtbl.iter (fun k v -> Array.set arr v k) tbl;
   arr
