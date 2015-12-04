@@ -1,8 +1,9 @@
 open Execute
 open Iofile
+open Parse
 open Assertions
 
-(*****************************UNIT TESTS FOR MAIN*****************************)
+(***************************UNIT TESTS FOR EXECUTE***************************)
 
 (*Tests for update*)
 (*#1, updating a single element*)
@@ -194,6 +195,11 @@ let updated = print_string "\nSELECT * FROM People WHERE Name = Jason\n";
   Hashtbl.add tab_dict "People" (col_dict, arr_dict);
   execute (Select(["*"], "People",
   Some (Op (Eq ("Name", String "JJ"))))) tab_dict
+
+
+
+(****************************UNIT TESTS FOR IOFILE****************************)
+
 (*Test write_file, read_file, string_to_dict, dict_to_string*)
 let col_dict = Hashtbl.create 3
 let arr_dict = Hashtbl.add col_dict "Name" 0;
@@ -214,4 +220,34 @@ TEST_UNIT = let pstr = dict_to_string people in
 (*read string from file and convert to dict. check that it is unchanged*)
 TEST_UNIT = string_to_dict (read_file "testing.txt") === people
 
-let _ = print_string "All tests run.\n"
+(****************************UNIT TESTS FOR IOFILE****************************)
+
+(*Test select*)
+TEST_UNIT = parse_input "SELECT Name, Age FROM table" ===
+  Select(["Name"; "Age"], "table", None)
+TEST_UNIT = parse_input "SELECT * FROM table WHERE Name = Bob" ===
+  Select(["*"], "table", Some (Op (Eq ("Name", String "Bob"))))
+
+(*Test update*)
+TEST_UNIT = parse_input "UPDATE table SET Name = Jason WHERE Name = Bob"
+  === Update("table", ["Name"], [String "Jason"], Op(Eq("Name", String "Bob")))
+
+(*Test delete*)
+TEST_UNIT = parse_input "DELETE FROM table WHERE Name != Bob" ===
+  Delete("table", Op (NotEq ("Name", String "Bob")))
+
+(*Test insert*)
+TEST_UNIT = parse_input "INSERT INTO table (Name, Age) VALUES (Bob, 12)" ===
+  Insert("table", ["Name"; "Age"], [String "Bob"; Int 12])
+
+(*Test create*)
+TEST_UNIT = parse_input "CREATE TABLE table (Name, Age)" ===
+  Create ("table", ["Name"; "Age"])
+
+(*Test drop*)
+TEST_UNIT = parse_input "DROP table" === Drop "table"
+
+(*Test open*)
+TEST_UNIT = parse_input "OPEN table" === Open "table"
+
+let _ = print_string "\nAll tests run.\n"

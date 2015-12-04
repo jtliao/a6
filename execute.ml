@@ -1,7 +1,5 @@
 open Iofile
 
-(* make cols the same type?, catch errors in parse, INSERT INTO test (Name) VALUES 12, 13
-get rid of commented out try/with*)
 type operator =
   |Eq of string * wrapper
   |Lt of string * wrapper
@@ -81,7 +79,6 @@ let execute_select (cols : string list) (tab: string) (cons: constr option)
                        (hash_to_array (fst table_dicts)))^"\n";
                        all_col_indices 0 (Hashtbl.length (fst table_dicts)))
                      else get_col_indices cols (fst table_dicts) in
-    (*add column headers to string here*)
     for x = 0 to Hashtbl.length (snd table_dicts)-1 do
       let arr = Hashtbl.find (snd table_dicts) x in
       match cons with
@@ -153,7 +150,6 @@ let execute_delete (tab : string) (cons : constr)
 (*Execute the insert command on [tab] and return the updated hashtable*)
 let execute_insert (tab: string) (cols : string list) (wrap: wrapper list)
 (dict: ('a,'b) Hashtbl.t) : ('a,'b) Hashtbl.t =
-  (*try( *)
     let table_dicts = Hashtbl.find dict tab in
     let index_list = get_col_indices cols (fst table_dicts) in
     let arr_length = Hashtbl.length (fst table_dicts) in
@@ -167,9 +163,6 @@ let execute_insert (tab: string) (cols : string list) (wrap: wrapper list)
     done; Hashtbl.replace (snd table_dicts)
       (Hashtbl.length (snd table_dicts)) arr;
       Hashtbl.replace dict tab (fst table_dicts, snd table_dicts); dict
-  (* )
-  with
-    |_ -> print_string "Invalid INSERT query.\n"; dict*)
 
 (*Create a table with specified columns in them*)
 let rec create_col_dict (cols : string list) (col_dict: ('a,'b) Hashtbl.t)

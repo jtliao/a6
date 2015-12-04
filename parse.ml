@@ -28,7 +28,6 @@ let strip (s:string) : string =
    else if String.get s 0 = ''' && String.get s ((String.length s)-1) = ')'
     then String.sub s 1 ((String.length s) - 2)
   else s
-  (*Possibly include another case where the word s is surrounded by apostrophes*)
 
 (*If s is a valid string of an int, then convert it to an int.
 NOTE: Use max_int to indicate that the function failed.*)
@@ -117,15 +116,12 @@ let rec gen_constraint (l: string list) : constr =
   let c = num_ops l in
   match List.length l with
   |3 -> gen_constraint_op l
-  (*|7 -> if List.mem "and" l then gen_constraint_and l
-        else if List.mem "or" l then gen_constraint_or l
-        else failwith "Probably a typo or something"*)
   |k when (k >= 7 && k = 4*c - 1) ->
               if List.mem "AND" l then
               And(gen_constraint_op (sub_list l 0 2), gen_constraint (sub_list l 4 ((List.length l) - 1)))
               else if List.mem "OR" l then
               Or(gen_constraint_op (sub_list l 0 2), gen_constraint (sub_list l 4 ((List.length l) - 1)))
-              else failwith "Probably a typo or something\n"
+              else failwith "Typo\n"
   |_ -> failwith "Too few/incorrect constraints or incorrect spacing\n"
 
 
