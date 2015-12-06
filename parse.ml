@@ -2,7 +2,7 @@ open Execute
 open Iofile
 open Str
 
-(*Gets the first index of a string that appears in a list. Used in parse_input.*)
+(*Gets the first index of a string that appears in a list.*)
 let get_index (l : string list) (s: string) : int =
   let rec helper l s c =
     match l with
@@ -103,8 +103,8 @@ let info_list_update (l: string list): wrapper list =
 an operator and a wrapper. Returns an Op of operator*)
 let gen_constraint_op (l: string list) : constr =
   let ops = ["="; "!="; "<"; ">"; ">="; "<="] in
-  match get_index ops (List.nth l 1) with (*Need to determine if the third element in the list*)
-  |0 -> Op(Eq ((List.nth l 0), convert_to_wrapper (List.nth l 2)))(*is a string or a floar or an int*)
+  match get_index ops (List.nth l 1) with
+  |0 -> Op(Eq ((List.nth l 0), convert_to_wrapper (List.nth l 2)))
   |1 -> Op(NotEq ((List.nth l 0), convert_to_wrapper (List.nth l 2)))
   |2 -> Op(Lt ((List.nth l 0), convert_to_wrapper (List.nth l 2)))
   |3 -> Op(Gt ((List.nth l 0), convert_to_wrapper (List.nth l 2)))
@@ -118,13 +118,13 @@ let rec gen_constraint (l: string list) : constr =
   |3 -> gen_constraint_op l
   |k when (k >= 7 && k = 4*c - 1) ->
               if List.mem "AND" l then
-              And(gen_constraint_op (sub_list l 0 2), gen_constraint (sub_list l 4 ((List.length l) - 1)))
+              And(gen_constraint_op (sub_list l 0 2),
+                gen_constraint (sub_list l 4 ((List.length l) - 1)))
               else if List.mem "OR" l then
-              Or(gen_constraint_op (sub_list l 0 2), gen_constraint (sub_list l 4 ((List.length l) - 1)))
+              Or(gen_constraint_op (sub_list l 0 2),
+                gen_constraint (sub_list l 4 ((List.length l) - 1)))
               else failwith "Typo\n"
   |_ -> failwith "Too few/incorrect constraints or incorrect spacing\n"
-
-
 
 (*Parses a string list into a select command*)
 let parse_select (l: string list) : command =
@@ -133,7 +133,7 @@ let parse_select (l: string list) : command =
   let table = List.nth l (from_index + 1) in
     match get_index l table = (List.length l) - 1 with
     |true -> Select (lst, table, None)
-    |false -> let subl = sub_list l ((get_index l table)+2) ((List.length l)-1) in
+    |false -> let subl=sub_list l ((get_index l table)+2) ((List.length l)-1) in
     Select (lst, table, Some (gen_constraint subl))
 
 
@@ -159,7 +159,8 @@ let parse_insert (l: string list) : command =
   let k = get_index l "VALUES" in
   if k = 3
    then
-  Insert(table, [], List.map (fun s -> convert_to_wrapper s) (sub_list l 4 ((List.length l) - 1)))
+  Insert(table, [], List.map (fun s ->
+    convert_to_wrapper s) (sub_list l 4 ((List.length l) - 1)))
   else
     let columns = sub_list l 3 (k-1) in
     let str_list = sub_list l (k+1) ((List.length l) - 1) in
@@ -178,7 +179,8 @@ let parse_open (l: string list) : command = Open (List.nth l 1)
 
 (*Parses the string that the user inputs into a type command*)
 let parse_input (s:string) : command =
-  let coms = ["SELECT"; "UPDATE"; "DELETE"; "INSERT"; "CREATE"; "DROP"; "OPEN"] in
+  let coms =
+    ["SELECT"; "UPDATE"; "DELETE"; "INSERT"; "CREATE"; "DROP"; "OPEN"] in
   let regexp = regexp " " in
   let l = split regexp s in
   let mapped = List.map (fun s -> strip s) l in
